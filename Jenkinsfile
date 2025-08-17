@@ -15,7 +15,7 @@ pipeline {
 
         stage('Fetch ECR Repo URL') {
     steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS Access Key']]) {
             sh '''
                 ECR_REPO=$(aws ecr describe-repositories --repository-names ecommerce --query "repositories[0].repositoryUri" --output text)
                 echo "✅ ECR Repo: $ECR_REPO"
