@@ -30,11 +30,11 @@ pipeline {
             steps {
                 dir('E-commerce Application/client') {
                     sh "npm ci || npm install"
-                    sh "sudo docker build -t frontend:latest ."
+                    sh "docker build -t frontend:latest ."
                 }
                 dir('E-commerce Application') {
                     sh "npm ci || npm install"
-                    sh "sudo docker build -t backend:latest -f backend/Dockerfile ."
+                    sh "docker build -t backend:latest -f backend/Dockerfile ."
                 }
             }
         }
@@ -42,7 +42,7 @@ pipeline {
         stage('Login to AWS ECR') {
             steps {
                 sh """
-                    sudo aws ecr get-login-password --region ${env.AWS_DEFAULT_REGION} | \
+                    aws ecr get-login-password --region ${env.AWS_DEFAULT_REGION} | \
                     docker login --username AWS --password-stdin ${env.ECR_REPO}
                 """
             }
@@ -52,12 +52,12 @@ pipeline {
             steps {
                 sh """
                     # Tag and push frontend
-                    sudo docker tag frontend:latest ${env.ECR_REPO}:frontend-latest
-                    sudo docker push ${env.ECR_REPO}:frontend-latest
+                    docker tag frontend:latest ${env.ECR_REPO}:frontend-latest
+                    docker push ${env.ECR_REPO}:frontend-latest
 
                     # Tag and push backend
-                    sudo docker tag backend:latest ${env.ECR_REPO}:backend-latest
-                    sudo docker push ${env.ECR_REPO}:backend-latest
+                    docker tag backend:latest ${env.ECR_REPO}:backend-latest
+                    docker push ${env.ECR_REPO}:backend-latest
                 """
             }
         }
