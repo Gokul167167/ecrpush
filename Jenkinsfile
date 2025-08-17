@@ -32,8 +32,13 @@ pipeline {
                     sh "npm ci || npm install"
                     sh "docker build -t frontend:latest ."
                 }
-                dir('E-commerce Application') {
+                // Backend npm install
+                dir('E-commerce Application/backend') {
                     sh "npm ci || npm install"
+                }
+
+                // Backend Docker build
+                dir('E-commerce Application') {
                     sh "docker build -t backend:latest -f backend/Dockerfile ."
                 }
             }
