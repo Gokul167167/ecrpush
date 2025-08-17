@@ -30,6 +30,7 @@ pipeline {
             steps {
                 dir('E-commerce Application/client') {
                     sh "npm ci || npm install"
+                    sh "npm run build"
                     sh "docker build -t frontend:latest ."
                 }
                 // Backend npm install
