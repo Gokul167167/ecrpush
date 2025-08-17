@@ -12,6 +12,8 @@ COPY backend/ . .
 # Make sure you run npm run build in client before docker build backend
 COPY /client/build ./client/build
 
+
 EXPOSE 5000
+
 
 CMD ["node", "server.js"]
