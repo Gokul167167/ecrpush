@@ -14,17 +14,17 @@ pipeline {
         }
 
         stage('Fetch ECR Repo URL') {
-            steps {
-                script {
-                    env.ECR_REPO = sh(
-                        script: "aws ecr describe-repositories --repository-names ${env.ECR_REPO_NAME} --query 'repositories[0].repositoryUri' --output text",
-                        returnStdout: true
-                    ).trim()
-                    
-                    echo "✅ ECR Repo URL: ${env.ECR_REPO}"
-                }
-            }
+    steps {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+            sh '''
+                ECR_REPO=$(aws ecr describe-repositories --repository-names ecommerce --query "repositories[0].repositoryUri" --output text)
+                echo "✅ ECR Repo: $ECR_REPO"
+                echo "ECR_REPO=$ECR_REPO" > ecr_env
+            '''
         }
+    }
+}
+
 
         stage('Build Docker Images') {
             steps {
