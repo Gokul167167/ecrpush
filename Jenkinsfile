@@ -7,11 +7,6 @@ pipeline {
     }
 
     stages {
-        stage('Clean Workspace') {
-            steps {
-                deleteDir() // deletes everything in the workspace
-            }
-        }
         stage('Checkout Repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/Gokul167167/EKS-Blue-Green-Deployment.git'
