@@ -14,31 +14,29 @@ pipeline {
         }
 
         stage('Fetch ECR Repo URL') {
-    steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS Access Key']]) {
-            sh '''
-                ECR_REPO=$(aws ecr describe-repositories --repository-names ecommerce --query "repositories[0].repositoryUri" --output text)
-                echo "✅ ECR Repo: $ECR_REPO"
-                echo "ECR_REPO=$ECR_REPO" > ecr_env
-            '''
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS Access Key']]) {
+                    sh '''
+                        ECR_REPO=$(aws ecr describe-repositories --repository-names ecommerce --query "repositories[0].repositoryUri" --output text)
+                        echo "✅ ECR Repo: $ECR_REPO"
+                        echo "ECR_REPO=$ECR_REPO" > ecr_env
+                    '''
+                }
+            }
         }
-    }
-}
-
 
         stage('Build Docker Images') {
             steps {
                 dir('E-commerce Application/client') {
-                    sh "npm ci || npm install"
+                    sh "npm ci"
                     sh "npm run build"
                     sh "docker build -t frontend:latest ."
                 }
-                // Backend npm install
+
                 dir('E-commerce Application/backend') {
-                    sh "npm ci || npm install"
+                    sh "npm ci"
                 }
 
-                // Backend Docker build
                 dir('E-commerce Application') {
                     sh "docker build -t backend:latest -f backend/Dockerfile ."
                 }
@@ -47,24 +45,32 @@ pipeline {
 
         stage('Login to AWS ECR') {
             steps {
-                sh """
-                    aws ecr get-login-password --region ${env.AWS_DEFAULT_REGION} | \
-                    docker login --username AWS --password-stdin ${env.ECR_REPO}
-                """
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS Access Key']]) {
+                    script {
+                        def ECR_REPO = readFile('ecr_env').trim().split('=')[1]
+                        sh """
+                            aws ecr get-login-password --region ${env.AWS_DEFAULT_REGION} | \
+                            docker login --username AWS --password-stdin ${ECR_REPO}
+                        """
+                    }
+                }
             }
         }
 
         stage('Tag & Push Docker Images') {
             steps {
-                sh """
-                    # Tag and push frontend
-                    docker tag frontend:latest ${env.ECR_REPO}:frontend-latest
-                    docker push ${env.ECR_REPO}:frontend-latest
+                script {
+                    def ECR_REPO = readFile('ecr_env').trim().split('=')[1]
+                    sh """
+                        # Tag and push frontend
+                        docker tag frontend:latest ${ECR_REPO}:frontend-latest
+                        docker push ${ECR_REPO}:frontend-latest
 
-                    # Tag and push backend
-                    docker tag backend:latest ${env.ECR_REPO}:backend-latest
-                    docker push ${env.ECR_REPO}:backend-latest
-                """
+                        # Tag and push backend
+                        docker tag backend:latest ${ECR_REPO}:backend-latest
+                        docker push ${ECR_REPO}:backend-latest
+                    """
+                }
             }
         }
     }
